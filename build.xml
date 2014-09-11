@@ -16,6 +16,7 @@
       <delete dir="${config}/coverage" />
       <delete dir="${config}/logs" />
       <delete dir="${config}/pdepend" />
+      <delete dir="${config}/phpmetrics" />
   </target>
 
   <target name="prepare"
@@ -26,6 +27,7 @@
       <mkdir dir="${config}/coverage" />
       <mkdir dir="${config}/logs" />
       <mkdir dir="${config}/pdepend" />
+      <mkdir dir="${config}/phpmetrics" />
   </target>
 
   <target name="generate-code" description="Generate Currency-specific subclasses of Money and autoloader code">
@@ -86,7 +88,7 @@
     <target name="phpmetrics"
     description="Generates PHPMetrics">
     <exec logoutput="true"
-        command="${tools}/phpmetrics.phar --report-html=build/phpmetrics.html" />
+        command="${tools}/phpmetrics.phar --report-html=build/phpmetrics/phpmetrics.html ${source}" />
     </target>
 
     <target name="phpdox" description="Generate API documentation using phpDox">
