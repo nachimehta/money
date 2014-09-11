@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="Money" default="build" basedir=".">
- <target name="build" depends="prepare, lint, phploc-ci, pdepend, phpmd-ci, phpcs-ci, phpcpd-ci, phpunit, phpdox"/>
+ <target name="build" depends="prepare, lint, phploc-ci, pdepend, phpmd-ci, phpcs-ci, phpcpd-ci, phpunit, phpmetrics, phpdox"/>
 
   <property name="basedir" value="${project.basedir}" />
 
@@ -81,6 +81,12 @@
         description="Run unit tests with PHPUnit">
         <exec logoutput="true" checkreturn="true"
             command="${tools}/phpunit.phar --configuration ${config}/phpunit.xml" />
+    </target>
+
+    <target name="phpmetrics"
+    description="Generates PHPMetrics">
+    <exec logoutput="true"
+        command="${tools}/phpmetrics.phar --report-html=build/phpmetrics.html" />
     </target>
 
     <target name="phpdox" description="Generate API documentation using phpDox">
