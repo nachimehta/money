@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="Money" default="build" basedir=".">
- <target name="build" depends="prepare, lint, phploc-ci, pdepend, phpmd-ci, phpcs-ci, phpcpd-ci, phpunit, phpdcd, phpmetrics, phpdox"/>
+  <target name="nightly" depends="prepare, prepare-nightly, lint, phploc-ci, pdepend, phpmd-ci, phpcs-ci, phpcpd-ci, phpunit, phpdcd, phpmetrics, phpdox"/>
+  <target name="build" depends="prepare, lint, phpmd-ci, phpcs-ci, phpcpd-ci, phpunit, phpdcd"/>
+  <target name="dev" depends="lint, phpmd, phpcs, phpcpd, phpdcd phpunit" />
 
   <property name="basedir" value="${project.basedir}" />
 
@@ -9,35 +11,47 @@
   <property name="tests" value="${basedir}/tests" />
   <property name="tools" value="${config}/tools" />
 
-  <target name="clean"
+  <target name="clean-nightly"
       description="Clean up build artifacts">
       <delete dir="${config}/api" />
       <delete dir="${config}/code-browser" />
-      <delete dir="${config}/coverage" />
-      <delete dir="${config}/logs" />
       <delete dir="${config}/pdepend" />
       <delete dir="${config}/phpmetrics" />
+  </target>
+
+  <target name="prepare-nightly"
+      depends="clean-nightly"
+      description="Prepare for build">
+      <mkdir dir="${config}/api" />
+      <mkdir dir="${config}/code-browser" />
+      <mkdir dir="${config}/pdepend" />
+      <mkdir dir="${config}/phpmetrics" />
+  </target>
+
+  <target name="clean"
+      description="Clean up build artifacts">
+      <delete dir="${config}/coverage" />
+      <delete dir="${config}/logs" />
   </target>
 
   <target name="prepare"
       depends="clean"
       description="Prepare for build">
-      <mkdir dir="${config}/api" />
-      <mkdir dir="${config}/code-browser" />
       <mkdir dir="${config}/coverage" />
       <mkdir dir="${config}/logs" />
-      <mkdir dir="${config}/pdepend" />
-      <mkdir dir="${config}/phpmetrics" />
   </target>
 
-  <target name="generate-code" description="Generate Currency-specific subclasses of Money and autoloader code">
+
+  <target name="generate-code"
+    description="Generate Currency-specific subclasses of Money and autoloader code">
     <exec logoutput="true"
           command="${config}/generate-child-classes.php" />
     <exec logoutput="true"
           command="${tools}/phpab.phar --output ${source}/autoload.php ${source}" />
   </target>
 
-  <target name="lint" description="Perform syntax check of sourcecode files">
+  <target name="lint"
+    description="Perform syntax check of sourcecode files">
       <phplint level="info" cachefile="${config}/.lintCache.txt">
           <fileset dir="${source}">
               <include name="**/*.php" />
@@ -60,10 +74,22 @@
             command="${tools}/pdepend.phar --jdepend-xml=${config}/logs/jdepend.xml --jdepend-chart=${config}/pdepend/dependencies.svg --overview-pyramid=${config}/pdepend/overview-pyramid.svg ${source}" />
     </target>
 
+    <target name="phpmd"
+        description="Perform project mess detection using PHPMD and print human readable output. Intended for usage on the command line before committing.">
+        <exec logoutput="true"
+            command="${tools}/phpmd.phar ${source} text ${config}/phpmd.xml" />
+    </target>
+
     <target name="phpmd-ci"
         description="Perform project mess detection using PHPMD creating a log file for the continuous integration server">
         <exec logoutput="true"
             command="${tools}/phpmd.phar ${source} xml ${config}/phpmd.xml --reportfile ${config}/logs/pmd.xml" />
+    </target>
+
+    <target name="phpcs"
+        description="Find coding standard violations using PHP_CodeSniffer and print human readable output. Intended for usage on the command line before committing.">
+        <exec logoutput="true"
+        command="${tools}/phpcs.phar --standard=PSR2 --extensions=php --ignore=autoload.php ${source}" />
     </target>
 
     <target name="phpcs-ci"
@@ -71,6 +97,12 @@
         <exec logoutput="true"
             output="/dev/null"
             command="${tools}/phpcs.phar --report=checkstyle --report-file=${config}/logs/checkstyle.xml --standard=PSR2 --extensions=php --ignore=autoload.php ${source}" />
+    </target>
+
+    <target name="phpcpd"
+        description="Find duplicate code using PHPCPD">
+        <exec logoutput="true"
+            command="${tools}/phpcpd.phar -vvv ${source}" />
     </target>
 
     <target name="phpcpd-ci"
@@ -88,12 +120,18 @@
     <target name="phpdcd"
         description="Run PHPDeadCodeDetector">
         <exec logoutput="true"
+            command="${tools}/phpdcd.phar -vvv ${source}" />
+    </target>
+
+    <target name="phpdcd-ci"
+        description="Run PHPDeadCodeDetector">
+        <exec logoutput="true"
             command="${tools}/phpdcd.phar ${source}" />
     </target>
 
     <target name="phpmetrics"
-    description="Generates PHPMetrics">
-    <exec logoutput="true"
+      description="Generates PHPMetrics">
+      <exec logoutput="true"
         command="${tools}/phpmetrics.phar --report-html=build/phpmetrics/phpmetrics.html ${source}" />
     </target>
 
