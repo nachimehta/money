@@ -28,11 +28,14 @@
     <exec command="git fetch" />
     <exec command="git diff --name-only ${lastSuccess} FETCH_HEAD | grep \.php$ | tr '\n' ',' | sed 's/.$//'"
       outputProperty="fetchFiles" />
+    <exec command="tr '\n' ',' | sed 's/.$..'"  outputProperty="commaSeparatedFiles"/>
+    <exec command="tr '\n' '' "  outputProperty="spacedFiles"/>
+
     <exec command="git merge" />
   </target>
 
   <target name="git-succeed"
-    depends=" phpmd-files, phpcs-files, phpcpd-files"
+    depends="phpunit, phpmd-files, phpcs-files, phpcpd-files"
     description="Updates the lastSucced git ref hash whenever there is a successfull build">
     <phingcall target="store-current-git-hash">
   </target>
@@ -118,11 +121,11 @@
     </target>
 
     <target name="phpmd-files"
-        if="fetchFiles"
+        if="commaSeparatedFiles"
         description="Perform project mess detection using PHPMD creating a log file for the continuous integration server">
         <exec logoutput="true"
             checkreturn="true"
-            command="${tools}/phpmd.phar ${fetchFiles} xml ${config}/phpmd.xml --reportfile ${config}/logs/pmd.xml" />
+            command="${tools}/phpmd.phar ${commaSeparatedFiles} xml ${config}/phpmd.xml --reportfile ${config}/logs/pmd.xml" />
     </target>
 
     <target name="phpcs"
@@ -139,12 +142,12 @@
     </target>
 
     <target name="phpcs-files"
-        if="fetchFiles"
+        if="spacedFiles"
         description="Find coding standard violations using PHP_CodeSniffer creating a log file for the continuous integration server">
         <exec logoutput="true"
             checkreturn="true"
             output="/dev/null"
-            command="${tools}/phpcs.phar --report=checkstyle --report-file=${config}/logs/checkstyle.xml --standard=PSR2 --extensions=php --ignore=autoload.php ${fetchFiles}" />
+            command="${tools}/phpcs.phar --report=checkstyle --report-file=${config}/logs/checkstyle.xml --standard=PSR2 --extensions=php --ignore=autoload.php ${spacedFiles}" />
     </target>
 
     <target name="phpcpd"
@@ -160,25 +163,17 @@
     </target>
 
     <target name="phpcpd-files"
-        if="fetchFiles"
+        if="commaSeparatedFiles"
         description="Find duplicate code using PHPCPD">
         <exec logoutput="true"
             checkreturn="true"
-            command="${tools}/phpcpd.phar --log-pmd ${config}/logs/pmd-cpd.xml ${fetchFiles}" />
+            command="${tools}/phpcpd.phar --log-pmd ${config}/logs/pmd-cpd.xml --names=${commaSeparatedFiles}" />
     </target>
 
     <target name="phpunit"
         description="Run unit tests with PHPUnit">
         <exec logoutput="true" checkreturn="true"
-            command="${tools}/phpunit.phar --configuration ${config}/phpunit.xml" />
-    </target>
-
-    <target name="phpunit-files"
-        if="fetchFiles"
-        description="Run unit tests with PHPUnit">
-        <exec logoutput="true" checkreturn="true"
-            checkreturn="true"
-            command="${tools}/phpunit.phar --configuration ${config}/phpunit.xml" />
+            command="${tools}/phpunit.phar " />
     </target>
 
     <target name="phpdcd"
