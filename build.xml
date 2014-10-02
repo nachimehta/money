@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="Money" default="build" basedir=".">
   <target name="nightly" depends="prepare, prepare-nightly, lint, phploc-ci, pdepend, phpmd-ci, phpcs-ci, phpcpd-ci, phpunit, phpdcd, phpmetrics, phpdox"/>
-  <target name="build" depends="prepare, git-prepare, git-update, lint, git-succeed "/>
+  <target name="build" depends="prepare, prepare-last-rev, modified-files, lint, succeed-rev "/>
   <target name="dev" depends="lint, phpmd, phpcs, phpcpd, phpdcd, phpunit" />
 
   <property name="basedir" value="${project.basedir}" />
@@ -12,35 +12,33 @@
   <property name="tools" value="${config}/tools" />
 
 
-  <targaet name="git-prepare" description="Makes sure a last git ref hash is present.">
+  <targaet name="prepare-last-rev" description="Makes sure a last git ref hash is present.">
     <if>
       <not>
         <available file="${config}/.lastSuccess.txt" type="file" />
       </not>
       <then>
-        <phingcall target="git-succeed">
+        <phingcall target="store-current-rev">
       </then>
     </if>
   </targaet>
 
-  <target name="git-update" description="Fetches and Merges new changes.">
+  <target name="modified-files" description="Get list of modified files since last successfull build">
     <loadfile property="lastSuccess" srcFile="${config}/.lastSuccess.txt" />
-    <exec command="git fetch" />
-    <exec command="git diff --name-only ${lastSuccess} FETCH_HEAD | grep \.php$ | tr '\n' ',' | sed 's/.$//'"
+    <exec command="git diff --name-only ${lastSuccess} HEAD | grep \.php$"
       outputProperty="fetchFiles" />
     <exec command="tr '\n' ',' | sed 's/.$..'"  outputProperty="commaSeparatedFiles"/>
     <exec command="tr '\n' '' "  outputProperty="spacedFiles"/>
 
-    <exec command="git merge" />
   </target>
 
-  <target name="git-succeed"
+  <target name="succeed-rev"
     depends="phpunit, phpmd-files, phpcs-files, phpcpd-files"
     description="Updates the lastSucced git ref hash whenever there is a successfull build">
-    <phingcall target="store-current-git-hash">
+    <phingcall target="store-current-rev">
   </target>
 
-  <target name="store-current-git-hash" description="Stores the current git HEAD ref hash">
+  <target name="store-current-rev" description="Stores the current git HEAD ref hash">
     <exec command="git rev-parse HEAD" outputProperty="headRef" />
     <echo file="${config}/.lastSuccess.txt" append="false" msg="${headRef}" />
   </target>
