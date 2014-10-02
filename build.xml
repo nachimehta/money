@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="Money" default="build" basedir=".">
   <target name="nightly" depends="prepare, prepare-nightly, lint, phploc-ci, pdepend, phpmd-ci, phpcs-ci, phpcpd-ci, phpunit, phpdcd, phpmetrics, phpdox"/>
-  <target name="build" depends="prepare, lint, phpmd-ci, phpcs-ci, phpcpd-ci, phpunit"/>
+  <target name="build" depends="prepare, git-prepare, git-update, lint, git-succeed "/>
   <target name="dev" depends="lint, phpmd, phpcs, phpcpd, phpdcd, phpunit" />
 
   <property name="basedir" value="${project.basedir}" />
@@ -10,6 +10,37 @@
   <property name="source" value="${basedir}/src" />
   <property name="tests" value="${basedir}/tests" />
   <property name="tools" value="${config}/tools" />
+
+
+  <targaet name="git-prepare" description="Makes sure a last git ref hash is present.">
+    <if>
+      <not>
+        <available file="${config}/.lastSuccess.txt" type="file" />
+      </not>
+      <then>
+        <phingcall target="git-succeed">
+      </then>
+    </if>
+  </targaet>
+
+  <target name="git-update" description="Fetches and Merges new changes.">
+    <loadfile property="lastSuccess" srcFile="${config}/.lastSuccess.txt" />
+    <exec command="git fetch" />
+    <exec command="git diff --name-only ${lastSuccess} FETCH_HEAD | grep \.php$ | tr '\n' ',' | sed 's/.$//'"
+      outputProperty="fetchFiles" />
+    <exec command="git merge" />
+  </target>
+
+  <target name="git-succeed"
+    depends=" phpmd-files, phpcs-files, phpcpd-files"
+    description="Updates the lastSucced git ref hash whenever there is a successfull build">
+    <phingcall target="store-current-git-hash">
+  </target>
+
+  <target name="store-current-git-hash" description="Stores the current git HEAD ref hash">
+    <exec command="git rev-parse HEAD" outputProperty="headRef" />
+    <echo file="${config}/.lastSuccess.txt" append="false" msg="${headRef}" />
+  </target>
 
   <target name="clean-nightly"
       description="Clean up build artifacts">
@@ -86,6 +117,14 @@
             command="${tools}/phpmd.phar ${source} xml ${config}/phpmd.xml --reportfile ${config}/logs/pmd.xml" />
     </target>
 
+    <target name="phpmd-files"
+        if="fetchFiles"
+        description="Perform project mess detection using PHPMD creating a log file for the continuous integration server">
+        <exec logoutput="true"
+            checkreturn="true"
+            command="${tools}/phpmd.phar ${fetchFiles} xml ${config}/phpmd.xml --reportfile ${config}/logs/pmd.xml" />
+    </target>
+
     <target name="phpcs"
         description="Find coding standard violations using PHP_CodeSniffer and print human readable output. Intended for usage on the command line before committing.">
         <exec logoutput="true"
@@ -97,6 +136,15 @@
         <exec logoutput="true"
             output="/dev/null"
             command="${tools}/phpcs.phar --report=checkstyle --report-file=${config}/logs/checkstyle.xml --standard=PSR2 --extensions=php --ignore=autoload.php ${source}" />
+    </target>
+
+    <target name="phpcs-files"
+        if="fetchFiles"
+        description="Find coding standard violations using PHP_CodeSniffer creating a log file for the continuous integration server">
+        <exec logoutput="true"
+            checkreturn="true"
+            output="/dev/null"
+            command="${tools}/phpcs.phar --report=checkstyle --report-file=${config}/logs/checkstyle.xml --standard=PSR2 --extensions=php --ignore=autoload.php ${fetchFiles}" />
     </target>
 
     <target name="phpcpd"
@@ -111,9 +159,25 @@
             command="${tools}/phpcpd.phar --log-pmd ${config}/logs/pmd-cpd.xml ${source}" />
     </target>
 
+    <target name="phpcpd-files"
+        if="fetchFiles"
+        description="Find duplicate code using PHPCPD">
+        <exec logoutput="true"
+            checkreturn="true"
+            command="${tools}/phpcpd.phar --log-pmd ${config}/logs/pmd-cpd.xml ${fetchFiles}" />
+    </target>
+
     <target name="phpunit"
         description="Run unit tests with PHPUnit">
         <exec logoutput="true" checkreturn="true"
+            command="${tools}/phpunit.phar --configuration ${config}/phpunit.xml" />
+    </target>
+
+    <target name="phpunit-files"
+        if="fetchFiles"
+        description="Run unit tests with PHPUnit">
+        <exec logoutput="true" checkreturn="true"
+            checkreturn="true"
             command="${tools}/phpunit.phar --configuration ${config}/phpunit.xml" />
     </target>
 
