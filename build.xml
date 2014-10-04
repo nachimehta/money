@@ -12,16 +12,17 @@
   <property name="tools" value="${config}/tools" />
 
 
-  <targaet name="prepare-last-rev" description="Makes sure a last git ref hash is present.">
+  <target name="prepare-last-rev" description="Makes sure a last git ref hash is present.">
     <if>
       <not>
         <available file="${config}/.lastSuccess.txt" type="file" />
       </not>
       <then>
-        <phingcall target="store-current-rev">
+        <phingcall target="store-current-rev" >
+        </phingcall>
       </then>
     </if>
-  </targaet>
+  </target>
 
   <target name="modified-files" description="Get list of modified files since last successfull build">
     <loadfile property="lastSuccess" srcFile="${config}/.lastSuccess.txt" />
@@ -35,7 +36,8 @@
   <target name="succeed-rev"
     depends="phpunit, phpmd-files, phpcs-files, phpcpd-files"
     description="Updates the lastSucced git ref hash whenever there is a successfull build">
-    <phingcall target="store-current-rev">
+    <phingcall target="store-current-rev" >
+    </phingcall>
   </target>
 
   <target name="store-current-rev" description="Stores the current git HEAD ref hash">
