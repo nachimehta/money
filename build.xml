@@ -173,7 +173,7 @@
     <target name="phpunit"
         description="Run unit tests with PHPUnit">
         <exec logoutput="true" checkreturn="true"
-            command="${tools}/phpunit.phar " />
+            command="${tools}/phpunit.phar --configuration ${config}/phpunit.xml" />
     </target>
 
     <target name="phpdcd"
