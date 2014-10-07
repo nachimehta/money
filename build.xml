@@ -29,9 +29,9 @@
     <loadfile property="lastSuccess" srcFile="${config}/.lastSuccess.txt" />
     <exec command="git diff --name-only ${lastSuccess} HEAD | grep \.php$"
       outputProperty="fetchFiles" />
-    <exec command="echo &quot;${fetchFiles}&quot; | tr '\n' ',' | sed 's/.$..'"  outputProperty="commaSeparatedFiles"/>
+    <exec command="echo &quot;${fetchFiles}&quot; | tr '\n' ',' | sed 's/.$//'"  outputProperty="commaSeparatedFiles"/>
     <exec command="echo &quot;${fetchFiles}&quot; | tr '\n' '' "  outputProperty="spacedFiles"/>
-
+    <echo msg="The modified files from the last succesfull build are: ${spacedFiles}" />
   </target>
 
   <target name="succeed-rev"
