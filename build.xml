@@ -29,8 +29,8 @@
     <loadfile property="lastSuccess" srcFile="${config}/.lastSuccess.txt" />
     <exec command="git diff --name-only ${lastSuccess} HEAD | grep \.php$"
       outputProperty="fetchFiles" />
-    <exec command="echo ${fetchFiles} | tr '\n' ',' | sed 's/.$..'"  outputProperty="commaSeparatedFiles"/>
-    <exec command="echo ${fetchFiles} | tr '\n' '' "  outputProperty="spacedFiles"/>
+    <exec command="echo &quot;${fetchFiles}&quot; | tr '\n' ',' | sed 's/.$..'"  outputProperty="commaSeparatedFiles"/>
+    <exec command="echo &quot;${fetchFiles}&quot; | tr '\n' '' "  outputProperty="spacedFiles"/>
 
   </target>
 
