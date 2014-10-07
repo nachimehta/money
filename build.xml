@@ -18,6 +18,7 @@
         <available file="${config}/.lastSuccess.txt" type="file" />
       </not>
       <then>
+        <echo msg="No previous version state saved." />
         <phingcall target="store-current-rev" >
         </phingcall>
       </then>
@@ -28,19 +29,21 @@
     <loadfile property="lastSuccess" srcFile="${config}/.lastSuccess.txt" />
     <exec command="git diff --name-only ${lastSuccess} HEAD | grep \.php$"
       outputProperty="fetchFiles" />
-    <exec command="tr '\n' ',' | sed 's/.$..'"  outputProperty="commaSeparatedFiles"/>
-    <exec command="tr '\n' '' "  outputProperty="spacedFiles"/>
+    <exec command="echo ${fetchFiles} | tr '\n' ',' | sed 's/.$..'"  outputProperty="commaSeparatedFiles"/>
+    <exec command="echo ${fetchFiles} | tr '\n' '' "  outputProperty="spacedFiles"/>
 
   </target>
 
   <target name="succeed-rev"
     depends="phpunit, phpmd-files, phpcs-files, phpcpd-files"
     description="Updates the lastSucced git ref hash whenever there is a successfull build">
+    <echo msg="All phing task was succesfull." />
     <phingcall target="store-current-rev" >
     </phingcall>
   </target>
 
   <target name="store-current-rev" description="Stores the current git HEAD ref hash">
+    <echo msg="Storing current state. git HEAD ref" />
     <exec command="git rev-parse HEAD" outputProperty="headRef" />
     <echo file="${config}/.lastSuccess.txt" append="false" msg="${headRef}" />
   </target>
